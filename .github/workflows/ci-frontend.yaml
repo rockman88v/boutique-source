@@ -36,8 +36,8 @@ jobs:
         id: build_image
         run: |
           SERVICE_NAME="frontend"
-          IMAGE_NAME=vietchita/boutique-${SERVICE_NAME}:ver-$(git rev-parse --short HEAD)
-          docker build -t $IMAGE_NAME ./src/$SERVICE_NAME
+          IMAGE_NAME=vietchita/boutique-${SERVICE_NAME}:ver-$(git rev-parse --short HEAD)          
+          docker buildx build --cache-from=type=registry,ref=vietchita/boutique-${SERVICE_NAME}:cache --cache-to=type=registry,ref=vietchita/boutique-${SERVICE_NAME}:cache,mode=max -t $IMAGE_NAME ./src/$SERVICE_NAME
           echo $IMAGE_NAME
           docker push $IMAGE_NAME
 
