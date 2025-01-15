@@ -155,6 +155,18 @@
                 "nanos": 990000000
             },
             "categories": ["accessories", "bags"]
+        },
+        {
+            "id": "5YMWWN1NXX",
+            "name": "Backpack2",
+            "description": "A NEW trendy and spacious backpack perfect for daily use.",
+            "picture": "/static/img/products/backpack.jpg",
+            "priceUsd": {
+                "currencyCode": "USD",
+                "units": 199,
+                "nanos": 990000000
+            },
+            "categories": ["accessories", "bags"]
         }
     ]
 }
