@@ -36,7 +36,7 @@ jobs:
         id: build_image
         run: |
           SERVICE_NAME="frontend"
-          IMAGE_NAME=vietchita/boutique-${SERVICE_NAME}:$(git rev-parse --short HEAD)
+          IMAGE_NAME=vietchita/boutique-${SERVICE_NAME}:ver-$(git rev-parse --short HEAD)
           docker build -t $IMAGE_NAME ./src/$SERVICE_NAME
           echo $IMAGE_NAME
           docker push $IMAGE_NAME
@@ -49,7 +49,7 @@ jobs:
       - name: Update Helm Chart with new image
         run: |
           SERVICE_NAME="frontend"
-          IMAGE_NAME=vietchita/boutique-${SERVICE_NAME}:$(git rev-parse --short HEAD)
+          IMAGE_NAME=vietchita/boutique-${SERVICE_NAME}:ver-$(git rev-parse --short HEAD)
           
           # Clone the helmchart repo
           git clone https://github.com/rockman88v/boutique-helmchart.git
