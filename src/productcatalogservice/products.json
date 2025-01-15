@@ -167,6 +167,18 @@
                 "nanos": 990000000
             },
             "categories": ["accessories", "bags"]
+        },
+        {
+            "id": "5YMWWN1NYY",
+            "name": "Hat",
+            "description": "Shop for women's floppy straw hats with wide brims and foldable design",
+            "picture": "/static/img/products/hat.jpg",
+            "priceUsd": {
+                "currencyCode": "USD",
+                "units": 89,
+                "nanos": 990000000
+            },
+            "categories": ["accessories", "hat"]
         }
     ]
 }
