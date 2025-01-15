@@ -1,0 +1,94 @@
+name: CI Pipeline for Microservices
+
+on:
+  push:
+    paths:
+      - 'src/adservice/**'
+      - 'src/cartservice/**'
+      - 'src/checkoutservice/**'
+      - 'src/currencyservice/**'
+      - 'src/emailservice/**'
+      - 'src/frontend/**'
+      - 'src/loadgenerator/**'
+      - 'src/paymentservice/**'
+      - 'src/productcatalogservice/**'
+      - 'src/recommendationservice/**'
+      - 'src/shippingservice/**'
+  pull_request:
+    paths:
+      - 'src/adservice/**'
+      - 'src/cartservice/**'
+      - 'src/checkoutservice/**'
+      - 'src/currencyservice/**'
+      - 'src/emailservice/**'
+      - 'src/frontend/**'
+      - 'src/loadgenerator/**'
+      - 'src/paymentservice/**'
+      - 'src/productcatalogservice/**'
+      - 'src/recommendationservice/**'
+      - 'src/shippingservice/**'
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: 
+          - adservice
+          - cartservice
+          - checkoutservice
+          - currencyservice
+          - emailservice
+          - frontend
+          - loadgenerator
+          - paymentservice
+          - productcatalogservice
+          - recommendationservice
+          - shippingservice
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and push Docker image
+        id: build_image
+        run: |
+          SERVICE_NAME=${{ matrix.service }}
+          IMAGE_NAME=vietchita/boutique-${SERVICE_NAME}:$(git rev-parse --short HEAD)
+          docker build -t $IMAGE_NAME ./src/$SERVICE_NAME
+          echo $IMAGE_NAME
+          docker push $IMAGE_NAME
+
+      - name: Install yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/download/v4.15.1/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
+      - name: Update Helm Chart with new image
+        run: |
+          SERVICE_NAME=${{ matrix.service }}
+          IMAGE_NAME=vietchita/boutique-${SERVICE_NAME}:$(git rev-parse --short HEAD)
+          
+          # Clone the helmchart repo
+          git clone https://github.com/rockman88v/boutique-helmchart.git
+          cd boutique-helmchart
+          
+          # Update values.yaml with the new image using yq
+          yq eval ".${SERVICE_NAME}.image = \"${IMAGE_NAME}\"" -i values.yaml
+          
+          # Commit and push the updated values.yaml
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add values.yaml
+          git commit -m "Update ${SERVICE_NAME} image to ${IMAGE_NAME}"
+          git push
