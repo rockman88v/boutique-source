@@ -179,6 +179,18 @@
                 "nanos": 990000000
             },
             "categories": ["accessories", "hat"]
+        },
+        {
+            "id": "5YMWWN1NZZ",
+            "name": "Daniel Wellington",
+            "description": "Daniel Wellington 36mm Rose Gold Classic Watch",
+            "picture": "/static/img/products/dw.jpg",
+            "priceUsd": {
+                "currencyCode": "USD",
+                "units": 289,
+                "nanos": 990000000
+            },
+            "categories": ["accessories", "watch"]
         }
     ]
 }
