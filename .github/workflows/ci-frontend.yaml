@@ -85,11 +85,17 @@ jobs:
           --plaintext
       - name: Wait for Deployment to be Healthy
         run: |
+          echo "Syncing ArgoCD application '$ARGOCD_APP_NAME'..."
+          argocd app sync $ARGOCD_APP_NAME --async \
+              --server "$ARGOCD_SERVER" \
+              --auth-token "$ARGOCD_AUTH_TOKEN" \
+              --plaintext \
+
           echo "Check Deployment status '$MY_DEPLOYMENT' within 2 minutes..."
           if argocd app wait $ARGOCD_APP_NAME \
               --server "$ARGOCD_SERVER" \
               --auth-token "$ARGOCD_AUTH_TOKEN" \
-              --plaintext              
+              --plaintext \
               --resource apps:Deployment:$MY_DEPLOYMENT \
               --health \
               --timeout 120; then
