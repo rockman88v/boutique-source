@@ -64,3 +64,31 @@ jobs:
           git add values.yaml
           git commit -m "Update ${SERVICE_NAME} image to ${IMAGE_NAME}"
           git push
+
+  sync_argocd_app:
+    needs: build_and_deploy
+    runs-on: github-runner-k8s
+    env:
+      ARGOCD_SERVER: argocd-server.argocd
+      ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      ARGOCD_APP_NAME: onlineboutique
+      MY_DEPLOYMENT: frontend
+    steps:
+      - name: List app
+        run: |
+          echo "Check argocd app list..."
+          argocd app list
+      - name: Wait for Deployment to be Healthy
+        run: |
+          echo "Check Deployment status '$MY_DEPLOYMENT' within 2 minutes..."
+          if argocd app wait $ARGOCD_APP_NAME \
+              --resource apps:Deployment:$MY_DEPLOYMENT \
+              --health \
+              --timeout 120; then
+
+              echo "Success: Deployment $MY_DEPLOYMENT is HEALTHY!"
+              exit 0
+          else
+              echo "Failure: Deployment $MY_DEPLOYMENT did not reach Healthy status within 2 minutes."
+              exit 1
+          fi
