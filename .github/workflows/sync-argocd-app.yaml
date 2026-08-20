@@ -21,6 +21,16 @@ on:
         required: false
         type: string
         default: "120"
+      retry_count:
+        description: "Số lần retry mỗi lệnh argocd CLI khi thất bại"
+        required: false
+        type: string
+        default: "3"
+      retry_interval:
+        description: "Thời gian (giây) chờ giữa các lần retry"
+        required: false
+        type: string
+        default: "10"
     secrets:
       ARGOCD_AUTH_TOKEN:
         required: true
@@ -33,25 +43,54 @@ jobs:
       ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       ARGOCD_APP_NAME: ${{ inputs.argocd_app_name }}
       DEPLOYMENT_NAME: ${{ inputs.deployment_name }}
+      RETRY_COUNT: ${{ inputs.retry_count }}
+      RETRY_INTERVAL: ${{ inputs.retry_interval }}
     steps:
       - name: List app
         run: |
+          # Retry wrapper: chống trường hợp ArgoCD server tạm thời không sẵn sàng
+          retry() {
+            local attempt=1
+            until "$@"; do
+              if [ "$attempt" -ge "$RETRY_COUNT" ]; then
+                echo "Lệnh thất bại sau $attempt lần thử: $*"
+                return 1
+              fi
+              echo "Lệnh thất bại (lần $attempt/$RETRY_COUNT), thử lại sau ${RETRY_INTERVAL}s..."
+              attempt=$((attempt + 1))
+              sleep "$RETRY_INTERVAL"
+            done
+          }
+
           echo "Check argocd app list..."
-          argocd app list \
+          retry argocd app list \
           --server "$ARGOCD_SERVER" \
           --auth-token "$ARGOCD_AUTH_TOKEN" \
           --plaintext
 
       - name: Sync app and wait for Deployment to be Healthy
         run: |
+          retry() {
+            local attempt=1
+            until "$@"; do
+              if [ "$attempt" -ge "$RETRY_COUNT" ]; then
+                echo "Lệnh thất bại sau $attempt lần thử: $*"
+                return 1
+              fi
+              echo "Lệnh thất bại (lần $attempt/$RETRY_COUNT), thử lại sau ${RETRY_INTERVAL}s..."
+              attempt=$((attempt + 1))
+              sleep "$RETRY_INTERVAL"
+            done
+          }
+
           echo "Syncing ArgoCD application '$ARGOCD_APP_NAME'..."
-          argocd app sync $ARGOCD_APP_NAME --async \
+          retry argocd app sync $ARGOCD_APP_NAME --async \
               --server "$ARGOCD_SERVER" \
               --auth-token "$ARGOCD_AUTH_TOKEN" \
               --plaintext
 
           echo "Check Deployment status '$DEPLOYMENT_NAME' within ${{ inputs.timeout }}s..."
-          if argocd app wait $ARGOCD_APP_NAME \
+          if retry argocd app wait $ARGOCD_APP_NAME \
               --server "$ARGOCD_SERVER" \
               --auth-token "$ARGOCD_AUTH_TOKEN" \
               --plaintext \
