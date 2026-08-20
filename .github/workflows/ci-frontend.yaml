@@ -71,7 +71,7 @@ jobs:
     #needs: build_and_deploy
     runs-on: github-runner-k8s
     env:
-      ARGOCD_SERVER: argocd-server.argocd.svc.cluster.local:80
+      ARGOCD_SERVER: argocd-server.argocd.svc.cluster.local:443
       ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       ARGOCD_APP_NAME: onlineboutique
       MY_DEPLOYMENT: frontend
@@ -81,8 +81,7 @@ jobs:
           echo "Check argocd app list..."
           argocd app list \
           --server "$ARGOCD_SERVER" \
-          --auth-token "$ARGOCD_AUTH_TOKEN" \
-          --grpc-web \
+          --auth-token "$ARGOCD_AUTH_TOKEN" \          
           --insecure
       - name: Wait for Deployment to be Healthy
         run: |
