@@ -5,10 +5,12 @@ on:
     paths:
       - 'src/frontend/**'  # Trigger khi có thay đổi trong thư mục frontend
       - .github/workflows/ci-frontend.yaml
+      - .github/workflows/sync-argocd-app.yaml
   pull_request:
     paths:
       - 'src/frontend/**'  # Trigger khi có thay đổi trong thư mục frontend
       - .github/workflows/ci-frontend.yaml
+      - .github/workflows/sync-argocd-app.yaml
 
 jobs:
   build_and_deploy:
