@@ -80,9 +80,9 @@ jobs:
         run: |
           echo "Check argocd app list..."
           argocd app list \
-          --server "$ARGOCD_SERVER" \
-          --auth-token "$ARGOCD_AUTH_TOKEN" \          
-          --insecure
+          --server argocd-server.argocd.svc.cluster.local:80 \
+          --auth-token "$ARGOCD_AUTH_TOKEN" \
+          --plaintext
       - name: Wait for Deployment to be Healthy
         run: |
           echo "Check Deployment status '$MY_DEPLOYMENT' within 2 minutes..."
