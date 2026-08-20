@@ -69,40 +69,9 @@ jobs:
 
   sync_argocd_app:
     needs: build_and_deploy
-    runs-on: github-runner-k8s
-    env:
-      ARGOCD_SERVER: argocd-server.argocd.svc.cluster.local:80
+    uses: ./.github/workflows/sync-argocd-app.yaml
+    with:
+      argocd_app_name: onlineboutique
+      deployment_name: frontend
+    secrets:
       ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
-      ARGOCD_APP_NAME: onlineboutique
-      MY_DEPLOYMENT: frontend
-    steps:
-      - name: List app
-        run: |
-          echo "Check argocd app list..."
-          argocd app list \
-          --server "$ARGOCD_SERVER" \
-          --auth-token "$ARGOCD_AUTH_TOKEN" \
-          --plaintext
-      - name: Wait for Deployment to be Healthy
-        run: |
-          echo "Syncing ArgoCD application '$ARGOCD_APP_NAME'..."
-          argocd app sync $ARGOCD_APP_NAME --async \
-              --server "$ARGOCD_SERVER" \
-              --auth-token "$ARGOCD_AUTH_TOKEN" \
-              --plaintext \
-
-          echo "Check Deployment status '$MY_DEPLOYMENT' within 2 minutes..."
-          if argocd app wait $ARGOCD_APP_NAME \
-              --server "$ARGOCD_SERVER" \
-              --auth-token "$ARGOCD_AUTH_TOKEN" \
-              --plaintext \
-              --resource apps:Deployment:$MY_DEPLOYMENT \
-              --health \
-              --timeout 120; then
-
-              echo "Success: Deployment $MY_DEPLOYMENT is HEALTHY!"
-              exit 0
-          else
-              echo "Failure: Deployment $MY_DEPLOYMENT did not reach Healthy status within 2 minutes."
-              exit 1
-          fi

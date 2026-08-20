@@ -1,0 +1,67 @@
+name: Sync ArgoCD App
+
+on:
+  workflow_call:
+    inputs:
+      argocd_app_name:
+        description: "Tên ArgoCD Application cần sync"
+        required: true
+        type: string
+      deployment_name:
+        description: "Tên Deployment cần chờ Healthy sau khi sync"
+        required: true
+        type: string
+      argocd_server:
+        description: "Địa chỉ ArgoCD server (host:port)"
+        required: false
+        type: string
+        default: argocd-server.argocd.svc.cluster.local:80
+      timeout:
+        description: "Thời gian tối đa (giây) chờ Deployment Healthy"
+        required: false
+        type: string
+        default: "120"
+    secrets:
+      ARGOCD_AUTH_TOKEN:
+        required: true
+
+jobs:
+  sync_argocd_app:
+    runs-on: github-runner-k8s
+    env:
+      ARGOCD_SERVER: ${{ inputs.argocd_server }}
+      ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      ARGOCD_APP_NAME: ${{ inputs.argocd_app_name }}
+      DEPLOYMENT_NAME: ${{ inputs.deployment_name }}
+    steps:
+      - name: List app
+        run: |
+          echo "Check argocd app list..."
+          argocd app list \
+          --server "$ARGOCD_SERVER" \
+          --auth-token "$ARGOCD_AUTH_TOKEN" \
+          --plaintext
+
+      - name: Sync app and wait for Deployment to be Healthy
+        run: |
+          echo "Syncing ArgoCD application '$ARGOCD_APP_NAME'..."
+          argocd app sync $ARGOCD_APP_NAME --async \
+              --server "$ARGOCD_SERVER" \
+              --auth-token "$ARGOCD_AUTH_TOKEN" \
+              --plaintext
+
+          echo "Check Deployment status '$DEPLOYMENT_NAME' within ${{ inputs.timeout }}s..."
+          if argocd app wait $ARGOCD_APP_NAME \
+              --server "$ARGOCD_SERVER" \
+              --auth-token "$ARGOCD_AUTH_TOKEN" \
+              --plaintext \
+              --resource apps:Deployment:$DEPLOYMENT_NAME \
+              --health \
+              --timeout ${{ inputs.timeout }}; then
+
+              echo "Success: Deployment $DEPLOYMENT_NAME is HEALTHY!"
+              exit 0
+          else
+              echo "Failure: Deployment $DEPLOYMENT_NAME did not reach Healthy status within ${{ inputs.timeout }}s."
+              exit 1
+          fi
