@@ -69,7 +69,7 @@ jobs:
     needs: build_and_deploy
     runs-on: github-runner-k8s
     env:
-      ARGOCD_SERVER: argocd-server.argocd
+      ARGOCD_SERVER: argocd-server.argocd.svc.cluster.local
       ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
       ARGOCD_APP_NAME: onlineboutique
       MY_DEPLOYMENT: frontend
